@@ -25,6 +25,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
         TAP: ${{ github.action_repository }}
+        SOURCE: ${{ github.repository }}
         CASK: ${{ inputs.cask }}
         VERSION: ${{ inputs.version }}
         ARCHIVE: ${{ inputs.archive }}
@@ -37,12 +38,20 @@ runs:
         archives=($ARCHIVE)
         [[ ${#archives[@]} -eq 1 && -f "${archives[0]}" ]] || { echo "$ARCHIVE must match exactly one file" >&2; exit 1; }
         archive="${archives[0]}"
+        name=$(basename "$archive")
         sha256=$(sha256sum "$archive" | cut -d' ' -f1)
 
-        # The archive first, so the cask never points at a missing file; a rerun replaces it.
-        gh release view "$tag" --repo "$TAP" >/dev/null 2>&1 \
-          || gh release create "$tag" --repo "$TAP" --title "$CASK $version" --notes "$CASK $version, published by ${{ github.repository }}."
-        gh release upload "$tag" "$archive" --repo "$TAP" --clobber
+        # The archive first, so the cask never points at a missing file. The release is
+        # drafted, filled, then published, as immutable releases allow no later upload.
+        # A rerun reuses a published archive only if it is the very same file.
+        if published=$(gh release view "$tag" --repo "$TAP" --json assets --jq ".assets[] | select(.name == \"$name\") | .digest" 2>/dev/null) && [[ -n "$published" ]]; then
+          [[ "$published" == "sha256:$sha256" ]] || { echo "$tag already holds a different $name" >&2; exit 1; }
+        else
+          gh release view "$tag" --repo "$TAP" >/dev/null 2>&1 \
+            || gh release create "$tag" --repo "$TAP" --draft --title "$CASK $version" --notes "$CASK $version, published from $SOURCE."
+          gh release upload "$tag" "$archive" --repo "$TAP" --clobber
+          gh release edit "$tag" --repo "$TAP" --draft=false
+        fi
 
         tap=$(mktemp -d)
         git clone --quiet --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/$TAP.git" "$tap"
