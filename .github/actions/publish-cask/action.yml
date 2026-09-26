@@ -1,0 +1,57 @@
+name: Publish a cask
+description: Attach an app archive to a release of the tap, then write the app's cask into Casks/ with its version and sha256.
+
+inputs:
+  cask:
+    description: The cask token, such as memo.
+    required: true
+  version:
+    description: The version to publish; a leading v is dropped.
+    required: true
+  archive:
+    description: The archive to publish, as a path or a glob matching one file.
+    required: true
+  definition:
+    description: The cask definition in the calling repository; its version and sha256 lines are replaced.
+    required: true
+  token:
+    description: A token that can write the contents of the tap.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        TAP: ${{ github.action_repository }}
+        CASK: ${{ inputs.cask }}
+        VERSION: ${{ inputs.version }}
+        ARCHIVE: ${{ inputs.archive }}
+        DEFINITION: ${{ inputs.definition }}
+      run: |
+        set -euo pipefail
+        version="${VERSION#v}"
+        tag="$CASK-$version"
+        # shellcheck disable=SC2206 # the glob must expand
+        archives=($ARCHIVE)
+        [[ ${#archives[@]} -eq 1 && -f "${archives[0]}" ]] || { echo "$ARCHIVE must match exactly one file" >&2; exit 1; }
+        archive="${archives[0]}"
+        sha256=$(sha256sum "$archive" | cut -d' ' -f1)
+
+        # The archive first, so the cask never points at a missing file; a rerun replaces it.
+        gh release view "$tag" --repo "$TAP" >/dev/null 2>&1 \
+          || gh release create "$tag" --repo "$TAP" --title "$CASK $version" --notes "$CASK $version, published by ${{ github.repository }}."
+        gh release upload "$tag" "$archive" --repo "$TAP" --clobber
+
+        tap=$(mktemp -d)
+        git clone --quiet --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/$TAP.git" "$tap"
+        mkdir -p "$tap/Casks"
+        sed -e "s/^  version .*/  version \"$version\"/" -e "s/^  sha256 .*/  sha256 \"$sha256\"/" "$DEFINITION" > "$tap/Casks/$CASK.rb"
+        cd "$tap"
+        git add Casks
+        if git diff --cached --quiet; then echo "Casks/$CASK.rb already at $version"; exit 0; fi
+        git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+          commit --quiet -m "$CASK $version"
+        git push --quiet
+        echo "Published $CASK $version to $TAP"
