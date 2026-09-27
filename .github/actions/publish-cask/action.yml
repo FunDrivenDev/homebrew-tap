@@ -17,6 +17,9 @@ inputs:
   token:
     description: A token that can write the contents of the tap.
     required: true
+  signing-key:
+    description: The SSH private key that signs the cask commit as Fun Driven Stuff <stuff@fundriven.dev>.
+    required: true
 
 runs:
   using: composite
@@ -30,6 +33,7 @@ runs:
         VERSION: ${{ inputs.version }}
         ARCHIVE: ${{ inputs.archive }}
         DEFINITION: ${{ inputs.definition }}
+        SIGNING_KEY: ${{ inputs.signing-key }}
       run: |
         set -euo pipefail
         version="${VERSION#v}"
@@ -60,7 +64,11 @@ runs:
         cd "$tap"
         git add Casks
         if git diff --cached --quiet; then echo "Casks/$CASK.rb already at $version"; exit 0; fi
-        git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-          commit --quiet -m "$CASK $version"
+        key=$(mktemp)
+        trap 'rm -f "$key"' EXIT
+        printf '%s\n' "$SIGNING_KEY" > "$key"
+        git -c user.name="Fun Driven Stuff" -c user.email="stuff@fundriven.dev" \
+          -c gpg.format=ssh -c user.signingkey="$key" \
+          commit --quiet --gpg-sign -m "$CASK $version"
         git push --quiet
         echo "Published $CASK $version to $TAP"
