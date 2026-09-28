@@ -1,8 +1,8 @@
 # The cask the Publish workflow writes into FunDrivenDev/homebrew-tap, with its version and
 # sha256 filled in.
 cask "memo" do
-  version "0.1.0"
-  sha256 "f68f8da28166eb5ccf1fccda7e2f6eee2430f6ed310855e66d73eea2462ba07f"
+  version "0.1.1"
+  sha256 "847795ecaa7a3e2997499faec5a0738a9489b5ea3088c7e792e9601ebedd0085"
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/memo-#{version}/memo-#{version}-macos-arm64.zip"
   name "memo"
