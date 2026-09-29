@@ -1,8 +1,8 @@
 # The cask the Publish workflow writes into FunDrivenDev/homebrew-tap, with its version and
 # sha256 filled in.
 cask "memo" do
-  version "0.1.3"
-  sha256 "9d1c7f053b1cbd9e1312805ff554e0b18a96de27a5f72fa756f26dcd4136c182"
+  version "0.1.4"
+  sha256 "d13a8929f78b3ed7cba630aec12baae00985c83d0eed1bcb18f6990a6d336b24"
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/memo-#{version}/memo-#{version}-macos-arm64.zip"
   name "memo"
@@ -10,14 +10,14 @@ cask "memo" do
   homepage "https://github.com/FunDrivenDev/memo"
 
   depends_on arch: :arm64
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "memo.app"
 
   # memo is ad-hoc signed, not signed with a Developer ID, so Gatekeeper would refuse
   # to open it while it carries the quarantine flag of the download.
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/memo.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/memo.app"]
   end
 
   zap trash: [
