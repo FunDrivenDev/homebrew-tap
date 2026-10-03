@@ -1,8 +1,8 @@
 # The cask the Release workflow writes into FunDrivenDev/homebrew-tap, with its version and
 # sha256 filled in.
 cask "maquereau" do
-  version "0.1.2"
-  sha256 "6706597508bcaf4a3d6b37b7037d6854dd2a7b41b06a9c6bfc99513766468f84"
+  version "0.1.3"
+  sha256 "68484ddab4c0f6fe544c5a2b903134709c90069203266fc0d2feee33db023c2e"
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/maquereau-#{version}/maquereau-#{version}-macos-arm64.zip"
   name "maquereau"
