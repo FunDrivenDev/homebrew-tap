@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "description": "The tools in mise.toml and the actions in .github/workflows. They only check the tap, never ship in it: minor and patch updates are grouped and merge themselves once CI is green and the release is three days old; majors wait for a review. The casks are not Renovate's: each app's release job updates its own.",
+  "enabledManagers": ["mise", "github-actions"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "checks",
+      "minimumReleaseAge": "3 days",
+      "automerge": true,
+      "platformAutomerge": false
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "reviewers": ["rlvdx"]
+    }
+  ]
+}
