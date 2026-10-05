@@ -1,0 +1,26 @@
+amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
+
+// Git hooks call the Justfile, never the tools behind it (README.md, Checks).
+hooks {
+    // Fix, then check, the staged files only; unstaged work is stashed meanwhile.
+    ["pre-commit"] {
+        fix = true
+        stash = "git"
+        steps {
+            ["just"] {
+                glob = "**/*"
+                check = "just lint staged"
+                fix = "just fmt staged && just lint staged"
+            }
+        }
+    }
+    // Check everything that differs from main, and audit, before it leaves the machine.
+    ["pre-push"] {
+        steps {
+            ["just"] {
+                glob = "**/*"
+                check = "just check changed && just audit"
+            }
+        }
+    }
+}
