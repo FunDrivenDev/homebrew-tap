@@ -1,0 +1,141 @@
+# The tap's CI (README.md, Checks). Every step is a `just` recipe, with the tools from
+# mise.toml. On a pull request, `changes` sorts the changed files by kind
+# (scripts/ci-changes.sh) and only the checks they need run; a push to main, a manual run
+# and the weekly run check everything. `ci-ok` is the one check the org ruleset requires.
+name: CI
+
+on:
+  # Every pull request, the release jobs' cask updates included (TAP_TOKEN is a PAT, so its
+  # pull requests trigger workflows, unlike GITHUB_TOKEN's).
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # Catches drift from outside: a removed release archive, a new Homebrew or runner image.
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # A job installs only the tools it needs; `mise exec` must not fetch the rest.
+  MISE_EXEC_AUTO_INSTALL: "false"
+
+jobs:
+  changes:
+    name: Sort changes by kind
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      lint: ${{ steps.sort.outputs.lint }}
+      casks: ${{ steps.sort.outputs.casks }}
+    steps:
+      # A pull request checks out its merge commit: its first parent is the base branch, so
+      # HEAD^1...HEAD is exactly what the PR changes.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.10.3
+          install_args: just
+      - id: sort
+        run: just ci-changes "$BASE"
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && 'HEAD^1' || '' }}
+
+  lint:
+    name: Scripts and workflows (just lint, test)
+    needs: changes
+    if: needs.changes.outputs.lint == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.10.3
+          install_args: just shellcheck actionlint
+      - run: just lint all shell
+      - run: just lint all actions
+      - run: just test
+
+  casks:
+    name: Casks (brew style, brew audit)
+    needs: changes
+    if: needs.changes.outputs.casks == 'true'
+    # Casks only install on macOS, and brew audit checks them as a Mac sees them (the
+    # archive, its app, its minimum macOS). Homebrew comes with the image. The tap is
+    # public, so macOS minutes cost nothing here.
+    runs-on: macos-26
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.10.3
+          install_args: just
+      # A pull request audits the casks it changes; a full run audits every cask.
+      - run: just lint "$SCOPE" casks
+        env:
+          SCOPE: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
+          CHANGES_BASE: HEAD^1
+          # brew audit --online asks GitHub's API about each cask's repository.
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+
+  audit:
+    name: Audit (just audit)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      # gitleaks reads the whole history.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.10.3
+          install_args: just gitleaks zizmor
+      - run: just audit
+
+  ci-ok:
+    name: ci-ok
+    needs: [changes, lint, casks, audit]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.10.3
+          install_args: just
+      # Skipped jobs are fine (the change did not need them); a failed or cancelled one is not.
+      - run: |
+          # shellcheck disable=SC2086 # one argument per job result
+          just ci-verdict $RESULTS
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
