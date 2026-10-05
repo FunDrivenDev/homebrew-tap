@@ -1,0 +1,19 @@
+# Every tool the tap's checks need, pinned; mise.lock records what they resolve to and
+# Renovate bumps them. Run them through the Justfile, never directly. Homebrew itself is
+# not here: mise cannot pin it, so the casks are checked with the brew of the Mac or the
+# runner image (README.md, Checks).
+
+[tools]
+just = "1.58.0"
+hk = "2.5.0"
+pkl = "0.32.1"
+act = "0.2.89"
+shellcheck = "0.11.0"
+actionlint = "1.7.12"
+gitleaks = "8.30.1"
+zizmor = "1.30.1"
+
+[settings]
+lockfile = true
+# linux-arm64: `just act` runs the Linux jobs in arm64 containers on a Mac.
+lockfile_platforms = ["macos-arm64", "linux-x64", "linux-arm64"]
