@@ -1,5 +1,5 @@
 name: Publish a cask
-description: Attach an app archive to a release of the tap, then write the app's cask into Casks/ with its version and sha256.
+description: Attach an app archive to a release of the tap, then write the app's cask into Casks/ with its version and sha256, through a pull request merged as soon as the tap allows.
 
 inputs:
   cask:
@@ -15,7 +15,7 @@ inputs:
     description: The cask definition in the calling repository; its version and sha256 lines are replaced.
     required: true
   token:
-    description: A token that can write the contents of the tap.
+    description: A token that can write the contents and the pull requests of the tap.
     required: true
   signing-key:
     description: The SSH private key that signs the cask commit as Fun Driven Stuff <stuff@fundriven.dev>.
@@ -67,8 +67,26 @@ runs:
         key=$(mktemp)
         trap 'rm -f "$key"' EXIT
         printf '%s\n' "$SIGNING_KEY" > "$key"
+        # The cask reaches main through a pull request: nothing pushes to main directly.
+        # A rerun force-pushes the same branch and reuses its open pull request.
+        branch="cask/$tag"
+        git switch --quiet --create "$branch"
         git -c user.name="Fun Driven Stuff" -c user.email="stuff@fundriven.dev" \
           -c gpg.format=ssh -c user.signingkey="$key" \
           commit --quiet --gpg-sign -m "$CASK $version"
-        git push --quiet
-        echo "Published $CASK $version to $TAP"
+        git push --quiet --force origin "$branch"
+        pr=$(gh pr list --repo "$TAP" --head "$branch" --state open --json number --jq '.[0].number // empty')
+        if [[ -z "$pr" ]]; then
+          url=$(gh pr create --repo "$TAP" --head "$branch" --title "$CASK $version" \
+            --body "$CASK $version, published from $SOURCE.")
+          pr=${url##*/}
+        fi
+        # GitHub works out whether a new pull request can merge a moment after it opens;
+        # until then, gh would ask for auto-merge rather than merge it.
+        for _ in {1..30}; do
+          [[ "$(gh pr view "$pr" --repo "$TAP" --json mergeStateStatus --jq .mergeStateStatus)" != UNKNOWN ]] && break
+          sleep 2
+        done
+        # Merges at once while the tap requires no check, else once its checks pass.
+        gh pr merge "$pr" --repo "$TAP" --auto --squash --delete-branch
+        echo "Published $CASK $version to $TAP through pull request #$pr"
