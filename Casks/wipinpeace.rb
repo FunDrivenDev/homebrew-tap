@@ -1,13 +1,13 @@
-# The cask the Release workflow writes into FunDrivenDev/homebrew-tap, with its version and
+# The cask `just publish` writes into FunDrivenDev/homebrew-tap, with its version and
 # sha256 filled in.
 cask "wipinpeace" do
-  version "0.1.5"
-  sha256 "83c66037c85f0062e6fa1efa78d74b9546272f2395836dc3f60fa5a29d6b66a2"
+  version "0.1.6"
+  sha256 "d6ee57e4be8ddadfff8ce7f1c6c86c6ea07d3eaac6a28498bc057de012e1b901"
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/wipinpeace-#{version}/wipinpeace-#{version}-macos-arm64.zip"
   name "wipinpeace"
   desc "Keyboard-driven focus on four priority topics, their issues and sessions"
-  homepage "https://github.com/FunDrivenDev/wipinpeace"
+  homepage "https://github.com/FunDrivenDev/homebrew-tap"
 
   depends_on arch: :arm64
   depends_on macos: :ventura
