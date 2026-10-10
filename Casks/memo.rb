@@ -1,13 +1,13 @@
 # The cask the Publish workflow writes into FunDrivenDev/homebrew-tap, with its version and
 # sha256 filled in.
 cask "memo" do
-  version "0.2.1"
-  sha256 "e7ad47359ea7eba6c457d85e2fad37665141b3b08ebe09b4f550079c9223b1e8"
+  version "0.2.3"
+  sha256 "5f4af18724aed42a1fdd338b1904f0ebd7150aa02ca3b95e3db253be4f87b5bf"
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/memo-#{version}/memo-#{version}-macos-arm64.zip"
   name "memo"
   desc "Keyboard-driven reader for the plans and reports Claude Code writes"
-  homepage "https://github.com/FunDrivenDev/memo"
+  homepage "https://github.com/FunDrivenDev/homebrew-tap"
 
   depends_on arch: :arm64
   depends_on macos: :ventura
