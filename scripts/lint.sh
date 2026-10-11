@@ -24,6 +24,6 @@ if want actions; then
 fi
 
 if want casks; then
-    files=$(scripts/files.sh "$scope" '^Casks/[^/]+\.rb$')
+    files=$(scripts/files.sh "$scope" '^(Casks|Formula)/[^/]+\.rb$')
     [[ -z "$files" ]] || scripts/casks.sh check $files
 fi

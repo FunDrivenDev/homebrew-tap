@@ -8,6 +8,16 @@ brew install fundrivendev/tap/memo
 
 The apps are ad-hoc signed, without an Apple Developer ID; their casks lift the quarantine flag so Gatekeeper lets them open.
 
+## Formulae
+
+`Formula/` holds the command-line tools. `toolbox` (private repository) is released locally with goreleaser; its archives are copied to a `toolbox-<version>` release here, and `Formula/toolbox.rb` gets the new `version` and the four `sha256` from the release's `checksums.txt`:
+
+```sh
+brew install fundrivendev/tap/toolbox
+```
+
+`just lint` checks the formulae as it checks the casks (`brew style`, then `brew audit --strict --online`).
+
 ## Publishing from an app repository
 
 In a workflow that runs once the app's own release is published, with the archive in the working directory and a `TAP_TOKEN` secret able to write this repository's contents and pull requests (fine-grained token: "Contents" and "Pull requests", read and write):
