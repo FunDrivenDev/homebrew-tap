@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Usage: casks.sh <check|fix> <cask file>... Runs brew style on the casks, then, for check,
-# brew audit. Both read the casks of a tapped tap by name, so the checkout is tapped under
+# Usage: casks.sh <check|fix> <cask or formula file>... Runs brew style on the casks
+# (Casks/) and formulae (Formula/), then, for check, brew audit. Both read the casks of a tapped tap by name, so the checkout is tapped under
 # a name of its own for the run and untapped after: the installed fundrivendev/tap stays
 # untouched, and brew style applies its cask rules wherever the checkout lives.
 set -euo pipefail
@@ -15,19 +15,33 @@ taps="$(brew --repository)/Library/Taps"
 trap 'rm -rf "${taps:?}/$user"' EXIT
 mkdir -p "$taps/$user"
 ln -s "$PWD" "$taps/$user/homebrew-tap"
-names=()
-for f in "$@"; do names+=("$user/tap/$(basename "$f" .rb)"); done
+casks=() formulae=()
+for f in "$@"; do
+    case "$f" in
+        Formula/*) formulae+=("$user/tap/$(basename "$f" .rb)") ;;
+        *) casks+=("$user/tap/$(basename "$f" .rb)") ;;
+    esac
+done
+
+# style and audit, once per kind present: --cask for the casks, --formula for the formulae.
+each() {
+    local cmd=$1
+    shift
+    if ((${#casks[@]})); then "$cmd" --cask "$@" "${casks[@]}"; fi
+    if ((${#formulae[@]})); then "$cmd" --formula "$@" "${formulae[@]}"; fi
+}
+style() { brew style "$@"; }
+audit() { brew audit "$@"; }
 
 case "$mode" in
-    fix) brew style --fix --cask "${names[@]}" ;;
+    fix) each style --fix ;;
     check)
-        brew style --cask "${names[@]}"
+        each style
         # --online fetches each archive: its url must answer and its sha256 must match. The
         # livecheck audits are left out: every cask of the tap releases from this one
         # repository, so GitHub's latest release is some other cask's.
-        brew audit --cask --strict --online \
-            --except=livecheck_version,hosting_with_livecheck,livecheck_https_availability \
-            "${names[@]}"
+        each audit --strict --online \
+            --except=livecheck_version,hosting_with_livecheck,livecheck_https_availability
         ;;
     *) echo "unknown mode $mode: check or fix" >&2; exit 2 ;;
 esac

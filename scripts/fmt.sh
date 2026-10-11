@@ -3,5 +3,5 @@
 # Usage: fmt.sh <scope>. Fixes the casks in scope with brew style --fix.
 set -euo pipefail
 
-casks=$(scripts/files.sh "$1" '^Casks/[^/]+\.rb$')
+casks=$(scripts/files.sh "$1" '^(Casks|Formula)/[^/]+\.rb$')
 [[ -z "$casks" ]] || scripts/casks.sh fix $casks
