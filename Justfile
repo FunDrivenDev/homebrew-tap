@@ -22,8 +22,11 @@ lint scope="all" family="":
 test scope="all":
     scripts/test.sh {{ quote(scope) }}
 
-# Lint, then test: what the hooks and CI gate on.
-check scope="all": (lint scope) (test scope)
+# Lint the scripts and workflows in scope, test, then catch drift: what the hooks gate on.
+check scope="all": (lint scope "shell") (lint scope "actions") (test scope) drift
+
+# Drift from outside (a removed archive, a new Homebrew): every cask audited online, ~20 s.
+drift: (lint "all" "casks")
 
 # Secrets or home paths anywhere in the history, then unsafe workflows and actions.
 audit:
