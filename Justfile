@@ -31,7 +31,7 @@ audit:
     zizmor --quiet .
 
 # Run the CI workflow locally (.actrc maps the runners).
-act event="pull_request":
+act event="workflow_dispatch":
     act {{ event }} --workflows .github/workflows/ci.yml -s GITHUB_TOKEN="$(gh auth token)"
 
 # CI: which checks the files changed since `base` need; no base means all of them.

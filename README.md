@@ -45,7 +45,7 @@ The action commits each cask as Fun Driven Stuff <stuff@fundriven.dev>, signed w
 
 ## Checks
 
-Every check is a `just` recipe, with the tools pinned in `mise.toml` (`just init` installs them and the git hooks of `hk.pkl`). Homebrew itself is the one tool mise cannot pin: the casks are checked with the brew of the Mac, or of the runner image in CI.
+Every check is a `just` recipe, with the tools pinned in `mise.toml` (`just init` installs them and the git hooks of `hk.pkl`). Homebrew itself is the one tool mise cannot pin: the casks are checked with the brew of the Mac, or of the runner image in a manual CI run.
 
 | Recipe | Runs |
 | --- | --- |
@@ -57,4 +57,4 @@ Every check is a `just` recipe, with the tools pinned in `mise.toml` (`just init
 
 The audit of a cask downloads its archive: the `url` must answer and the `sha256` must match. It leaves out the livecheck audits, since every cask releases from this repository and GitHub's latest release is then some other cask's. `brew audit` only takes the casks of a tapped tap, so `just lint` taps the checkout under a name of its own for the run and removes it after; the installed `fundrivendev/tap` stays untouched.
 
-On a pull request, CI (`.github/workflows/ci.yml`) runs only what the change needs: `just ci-changes` sorts the changed files by kind, docs run nothing, a cask runs the cask checks, a script the lint, and CI or tooling files everything. The audit runs on every pull request, and a push to `main`, a manual run and the Monday run check everything. The casks are checked on `macos-26`, where they install and where Homebrew comes with the image (the tap is public, so macOS minutes cost nothing); the rest runs on `ubuntu-24.04`. `ci-ok` gathers the results and is the check FunDrivenDev's org ruleset requires on `main`, so every change, the release jobs' cask updates included, lands through a pull request. `just act` runs the workflow locally: the Linux jobs in Docker, the cask job on the Mac itself.
+The git hooks of `hk.pkl` are the CI: the pre-commit hook lints the staged files, the pre-push hook runs `just check changed` and `just audit`, and FunDrivenDev's org ruleset gates `main` on the `dod` status `toolbox dod check` posts from the laptop. GitHub Actions runs no check on a pull request or a push: `.github/workflows/ci.yml` stays for a manual run, which checks everything, the casks on `macos-26` and the rest on `ubuntu-24.04`, with `ci-ok` gathering the results. `just act` runs it locally: the Linux jobs in Docker, the cask job on the Mac itself.
