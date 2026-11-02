@@ -12,9 +12,11 @@ export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ENV_HINTS=1 HOMEBREW_NO_ANALYTICS=1
 
 user="fundrivendev-check-$$"
 taps="$(brew --repository)/Library/Taps"
-trap 'rm -rf "${taps:?}/$user"' EXIT
+trap 'brew untrust --tap "$user/tap" >/dev/null 2>&1; rm -rf "${taps:?}/$user"' EXIT
 mkdir -p "$taps/$user"
 ln -s "$PWD" "$taps/$user/homebrew-tap"
+# Homebrew loads a non-official tap's formulae and casks only once it is trusted.
+brew trust --tap "$user/tap" >/dev/null
 casks=() formulae=() linux_formulae=()
 for f in "$@"; do
     case "$f" in
