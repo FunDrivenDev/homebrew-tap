@@ -4,27 +4,27 @@ class Toolbox < Formula
   desc "One CLI for the fundrivendev tooling: dod, worktrees, notes, sessions, hooks"
   # toolbox's repository is private, and brew audit requires a homepage that answers.
   homepage "https://github.com/FunDrivenDev/homebrew-tap"
-  version "0.7.0"
+  version "0.8.0"
 
   on_macos do
     on_arm do
       url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/toolbox-#{version}/toolbox_#{version}_darwin_arm64.tar.gz"
-      sha256 "7b98befb6d031a19255d1c5c1bb140813ff4bf093ab9090468be727e848bd9a4"
+      sha256 "8a8263c892d58f358e9b49a3daa5bfc5f60780e487aa9dfce69ae153e59c76ea"
     end
     on_intel do
       url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/toolbox-#{version}/toolbox_#{version}_darwin_amd64.tar.gz"
-      sha256 "f024512a2643504a59ed993e00ac71d8fa542db47685a0eab040418e0818461c"
+      sha256 "8f439585815e76d3525ced3830317b06d1e46f9b3662d6493f0956842ec04d6f"
     end
   end
 
   on_linux do
     on_arm do
       url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/toolbox-#{version}/toolbox_#{version}_linux_arm64.tar.gz"
-      sha256 "8ba4a40c2847ef824685df7f1aff1f26c42fe301245ffb22d000d155052e5781"
+      sha256 "eaaa6d271252f96de62fbbb1fcb52d6e252391d63c0e15fb3b298fea0e43400d"
     end
     on_intel do
       url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/toolbox-#{version}/toolbox_#{version}_linux_amd64.tar.gz"
-      sha256 "2e1d2621975775c5ee78acf1bb752e94ab277b93bd8b0dfc5d18d4a99b105bae"
+      sha256 "923b26545960be39af9d93654cb9efff2b64ee93c14073e076c73898547f4414"
     end
   end
 
