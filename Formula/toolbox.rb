@@ -1,7 +1,7 @@
 # The formula of toolbox, whose archives each release copies to a toolbox-<version> release
 # of this repository (toolbox's repository is private).
 class Toolbox < Formula
-  desc "One CLI for the fundrivendev tooling: dod, worktrees, notes, sessions, hooks"
+  desc "One CLI for the fundrivendev tooling: PR gate, worktrees, notes, sessions, hooks"
   # toolbox's repository is private, and brew audit requires a homepage that answers.
   homepage "https://github.com/FunDrivenDev/homebrew-tap"
   version "0.17.0"
