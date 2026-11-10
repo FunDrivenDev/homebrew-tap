@@ -14,12 +14,12 @@ hooks {
             }
         }
     }
-    // Check everything that differs from main, and audit, before it leaves the machine.
+    // Run the full checks, and audit, before anything leaves the machine: its record is the PR gate's proof.
     ["pre-push"] {
         steps {
             ["just"] {
                 glob = "**/*"
-                check = "just check changed && just audit"
+                check = "just check && just audit"
             }
         }
     }
