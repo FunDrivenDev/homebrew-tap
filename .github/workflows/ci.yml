@@ -1,7 +1,7 @@
 # The tap's CI (README.md, Checks). Every step is a `just` recipe, with the tools from
 # mise.toml. On a pull request, `changes` sorts the changed files by kind
 # (scripts/ci-changes.sh) and only the checks they need run; a push to main, a manual run
-# and the weekly run check everything. `ci-ok` is the one check the org ruleset requires.
+# and the weekly run check everything. `required-checks` gives the one verdict `toolbox pr gate` reads.
 name: CI
 
 on:
@@ -117,8 +117,8 @@ jobs:
           install_args: just gitleaks zizmor
       - run: just audit
 
-  ci-ok:
-    name: ci-ok
+  required-checks:
+    name: required-checks
     needs: [changes, lint, casks, audit]
     if: always()
     runs-on: ubuntu-24.04
