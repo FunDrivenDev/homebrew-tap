@@ -7,7 +7,7 @@ _default:
 
 # Once per clone, idempotent: the pinned tools, then the git hooks.
 init:
-    mise install
+    mise install --locked
     hk install
 
 # Format the casks in scope (brew style --fix); the only recipe that writes.
