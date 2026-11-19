@@ -1,0 +1,4 @@
+# The tap builds on the laptop and on GitHub Actions (fundrivenOS rules/ci/github-actions.md; M-CAXJ:D28): the cask
+# pull requests the app repositories' release jobs open with TAP_TOKEN get their checks on Actions, since no laptop
+# checks them, so ci.yml runs every job on every pull request.
+build = "both"

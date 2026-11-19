@@ -1,7 +1,10 @@
 # The tap's CI (README.md, Checks). Every step is a `just` recipe, with the tools from
-# mise.toml. On a pull request, `changes` sorts the changed files by kind
-# (scripts/ci-changes.sh) and only the checks they need run; a push to main, a manual run
-# and the weekly run check everything. `required-checks` gives the one verdict `toolbox pr gate` reads.
+# mise.toml. The tap builds `both` (.github/ci.toml, M-CAXJ:D28): every pull request runs
+# here, the cask updates the release jobs open with TAP_TOKEN and Renovate's included, as no
+# laptop checks them. `changes` sorts the changed files by kind (scripts/ci-changes.sh) and
+# only the checks they need run; a push to main, a manual run and the weekly run check
+# everything. `required-checks` gives the one verdict, and posts it on a pull request as the
+# `checks` commit status a laptop's pre-push posts.
 name: CI
 
 on:
@@ -11,7 +14,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Catches drift from outside: a removed release archive, a new Homebrew or runner image.
+  # Catches drift from outside, which no commit brings: a removed release archive, a new
+  # Homebrew (the one tool mise cannot pin) or runner image.
   schedule:
     - cron: "17 6 * * 1"
 
@@ -120,11 +124,13 @@ jobs:
   required-checks:
     name: required-checks
     needs: [changes, lint, casks, audit]
+    # always(), not !cancelled(): a cancelled job fails the verdict.
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
+      statuses: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -134,8 +140,19 @@ jobs:
           version: 2026.10.3
           install_args: just
       # Skipped jobs are fine (the change did not need them); a failed or cancelled one is not.
-      - run: |
+      - name: Pass only if every job succeeded or was skipped, and post the checks status
+        run: |
+          state=success
           # shellcheck disable=SC2086 # one argument per job result
-          just ci-verdict $RESULTS
+          just ci-verdict $RESULTS || state=failure
+          if [[ $EVENT == pull_request ]]; then
+            gh api -X POST "repos/$REPO/statuses/$SHA" -f state="$state" -f context=checks \
+              -f description="just check and just audit: $state on GitHub Actions" --jq '.state + " " + .context'
+          fi
+          [[ $state == success ]]
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
