@@ -9,8 +9,8 @@ _default:
 init:
     mise install --locked
 
-# The tap has no package dependencies: the pinned tools are all it needs (init).
-deps:
+# The tap has no package dependencies: the pinned tools are all it needs (init), whatever the mode (frozen in CI).
+deps mode="install":
     mise install --locked
 
 # Format the casks in scope (brew style --fix); the only recipe that writes.

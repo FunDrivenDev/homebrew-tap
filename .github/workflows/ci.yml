@@ -145,7 +145,8 @@ jobs:
           state=success
           # shellcheck disable=SC2086 # one argument per job result
           just ci-verdict $RESULTS || state=failure
-          if [[ $EVENT == pull_request ]]; then
+          # A fork's pull request gets a read-only token: no status to post there.
+          if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" ]]; then
             gh api -X POST "repos/$REPO/statuses/$SHA" -f state="$state" -f context=checks \
               -f description="just check and just audit: $state on GitHub Actions" --jq '.state + " " + .context'
           fi
@@ -155,4 +156,5 @@ jobs:
           EVENT: ${{ github.event_name }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           GH_TOKEN: ${{ github.token }}
