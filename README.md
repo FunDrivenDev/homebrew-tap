@@ -45,16 +45,16 @@ The action commits each cask as Fun Driven Stuff <stuff@fundriven.dev>, signed w
 
 ## Checks
 
-Every check is a `just` recipe, with the tools pinned in `mise.toml` (`just init` installs them and the git hooks of `hk.pkl`). Homebrew itself is the one tool mise cannot pin: the casks are checked with the brew of the Mac, or of the runner image in CI.
+Every check is a `just` recipe, with the tools pinned in `mise.toml` (`just init` installs them; the git hooks of `hk.pkl` need no install, the dotfiles' git config runs them in every repository under `~/Code/fundrivendev/`). The pre-commit hook runs `just audit staged`, then `just fmt staged` and `just lint staged`; the pre-push hook `just check`, then `just audit`. Homebrew itself is the one tool mise cannot pin: the casks are checked with the brew of the Mac, or of the runner image in CI.
 
 | Recipe | Runs |
 | --- | --- |
 | `just lint [scope] [family]` | shellcheck on `scripts/`, actionlint on the workflows, then `brew style` and `brew audit --cask --strict --online` on the casks |
 | `just test [scope]` | the tests of the CI change classifier |
 | `just check [scope]` | `lint`, then `test` |
-| `just audit` | gitleaks over the history (`.gitleaks.toml` adds a home-path rule), zizmor on the workflows and the action |
+| `just audit [scope]` | gitleaks over the history (`.gitleaks.toml` adds a home-path rule), zizmor on the workflows and the action; `staged`: gitleaks on the git index alone |
 | `just fmt [scope]` | `brew style --fix` on the casks |
 
 The audit of a cask downloads its archive: the `url` must answer and the `sha256` must match. It leaves out the livecheck audits, since every cask releases from this repository and GitHub's latest release is then some other cask's. `brew audit` only takes the casks of a tapped tap, so `just lint` taps the checkout under a name of its own for the run and removes it after; the installed `fundrivendev/tap` stays untouched.
 
-On a pull request, CI (`.github/workflows/ci.yml`) runs only what the change needs: `just ci-changes` sorts the changed files by kind, docs run nothing, a cask runs the cask checks, a script the lint, and CI or tooling files everything. The audit runs on every pull request, and a push to `main`, a manual run and the Monday run check everything. The casks are checked on `macos-26`, where they install and where Homebrew comes with the image (the tap is public, so macOS minutes cost nothing); the rest runs on `ubuntu-24.04`. `required-checks` gathers the results into the one check `toolbox pr gate` takes as a pull request's checks when no pass was recorded locally (the release jobs' cask updates, Renovate's pull requests). `just act` runs the workflow locally: the Linux jobs in Docker, the cask job on the Mac itself.
+The tap builds `both` (`.github/ci.toml`): on the laptop through the git hooks, and on GitHub Actions for every pull request, since the cask updates the app repositories' release jobs open, and Renovate's, are checked by no laptop. On a pull request, CI (`.github/workflows/ci.yml`) runs only what the change needs: `just ci-changes` sorts the changed files by kind, docs run nothing, a cask runs the cask checks, a script the lint, and CI or tooling files everything. The audit runs on every pull request, and a push to `main`, a manual run and the Monday run check everything. The casks are checked on `macos-26`, where they install and where Homebrew comes with the image (the tap is public, so macOS minutes cost nothing); the rest runs on `ubuntu-24.04`. `required-checks` gathers the results into one verdict, and posts it on a pull request as the `checks` commit status. `just act` runs the workflow locally: the Linux jobs in Docker, the cask job on the Mac itself.

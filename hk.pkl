@@ -1,25 +1,33 @@
 amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
 
-// Git hooks call the Justfile, never the tools behind it (README.md, Checks).
+// Git hooks call the Justfile, never the tools behind it (README.md, Checks; fundrivenOS rules/ci/hooks.md).
 hooks {
-    // Fix, then check, the staged files only; unstaged work is stashed meanwhile.
+    // No secret enters the history; the staged files are formatted, then linted. hk stashes the unstaged work
+    // meanwhile, so the staged state is what gets checked.
     ["pre-commit"] {
         fix = true
         stash = "git"
         steps {
+            ["audit"] {
+                check = "just audit staged"
+            }
             ["just"] {
+                depends = List("audit")
                 glob = "**/*"
                 check = "just lint staged"
                 fix = "just fmt staged && just lint staged"
             }
         }
     }
-    // Run the full checks, and audit, before anything leaves the machine: its record is the PR gate's proof.
+    // The full checks, then the audit, before anything leaves the machine: its record is the PR gate's proof.
     ["pre-push"] {
         steps {
-            ["just"] {
-                glob = "**/*"
-                check = "just check && just audit"
+            ["check"] {
+                check = "just check"
+            }
+            ["audit"] {
+                depends = List("check")
+                check = "just audit"
             }
         }
     }
