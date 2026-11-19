@@ -5,10 +5,13 @@
 _default:
     @just --list --unsorted
 
-# Once per clone, idempotent: the pinned tools, then the git hooks.
+# Once per clone, idempotent: the pinned tools. The git hooks need no install: the dotfiles' git config runs hk.pkl.
 init:
     mise install --locked
-    hk install
+
+# The tap has no package dependencies: the pinned tools are all it needs (init).
+deps:
+    mise install --locked
 
 # Format the casks in scope (brew style --fix); the only recipe that writes.
 fmt scope="all":
@@ -25,10 +28,13 @@ test scope="all":
 # Lint, then test: what the hooks and CI gate on.
 check scope="all": (lint scope) (test scope)
 
-# Secrets or home paths anywhere in the history, then unsafe workflows and actions.
-audit:
-    gitleaks git --config .gitleaks.toml --redact --no-banner --log-level warn .
-    zizmor --quiet .
+# Audit security: `all` (the default) secrets or home paths anywhere in the history, then unsafe workflows and actions; `staged` gitleaks on the git index alone (pre-commit).
+audit scope="all":
+    scripts/audit.sh {{ quote(scope) }}
+
+# The tests that reach the network: `just lint` already audits each cask online, so there are none of their own.
+test-live:
+    @echo "No live tests: just lint audits the casks online (brew audit --online)."
 
 # Run the CI workflow locally (.actrc maps the runners).
 act event="pull_request":
