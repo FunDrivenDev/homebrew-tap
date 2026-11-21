@@ -49,7 +49,7 @@ Every check is a `just` recipe, with the tools pinned in `mise.toml` (`just init
 
 | Recipe | Runs |
 | --- | --- |
-| `just lint [scope] [family]` | shellcheck on `scripts/`, actionlint on the workflows, then `brew style` and `brew audit --cask --strict --online` on the casks |
+| `just lint [scope] [family]` | shellcheck on `scripts/`, actionlint on the workflows, then `brew style` and `brew audit --strict --online` on the casks and formulae, and a download of each archive of a Linux-only formula against its `sha256` |
 | `just test [scope]` | the tests of the CI change classifier |
 | `just check [scope]` | `lint`, then `test` |
 | `just audit [scope]` | gitleaks over the history (`.gitleaks.toml` adds a home-path rule), zizmor on the workflows and the action; `staged`: gitleaks on the git index alone |
