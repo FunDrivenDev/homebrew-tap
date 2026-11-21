@@ -6,18 +6,18 @@ cask "mosst-template" do
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/mosst-template-#{version}/mosst-template-#{version}-macos-arm64.zip"
   name "mosst-template"
-  desc "The starting point of every MOSST app."
+  desc "Starting point of every MOSST app"
   homepage "https://github.com/FunDrivenDev/homebrew-tap"
 
   depends_on arch: :arm64
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "mosst-template.app"
 
   # mosst-template is ad-hoc signed, not signed with a Developer ID, so Gatekeeper would refuse
   # to open it while it carries the quarantine flag of the download.
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/mosst-template.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "mosst-template.app"], base: :appdir
   end
 
   zap trash: [
