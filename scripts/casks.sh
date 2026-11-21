@@ -65,7 +65,9 @@ case "$mode" in
     fix) each style --fix ;;
     check)
         each style
-        # --online fetches each archive: its url must answer and its sha256 must match. The
+        # --online fetches each cask's archive: its url must answer and its sha256 must
+        # match; a formula's archive is not fetched (linux_online checks the Linux-only
+        # ones). The
         # livecheck audits are left out: every cask of the tap releases from this one
         # repository, so GitHub's latest release is some other cask's.
         each audit --strict --online \
