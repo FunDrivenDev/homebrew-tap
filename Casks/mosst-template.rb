@@ -1,8 +1,8 @@
 # The cask `just publish` writes into FunDrivenDev/homebrew-tap, with its version and
 # sha256 filled in.
 cask "mosst-template" do
-  version "0.1.0"
-  sha256 "df0ff12a329745f5b1d19c7ceaac3f1130c72a1e266443faf38744a3f939725d"
+  version "0.1.1"
+  sha256 "e0126a5991cd9c7bb1f4781526d732fcec32c0c21d43a1fe2b547c26e8ded02e"
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/mosst-template-#{version}/mosst-template-#{version}-macos-arm64.zip"
   name "mosst-template"
