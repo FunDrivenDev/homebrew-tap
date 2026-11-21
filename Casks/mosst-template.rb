@@ -17,7 +17,7 @@ cask "mosst-template" do
   # mosst-template is ad-hoc signed, not signed with a Developer ID, so Gatekeeper would refuse
   # to open it while it carries the quarantine flag of the download.
   postflight_steps do
-    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "mosst-template.app"], base: :appdir
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/mosst-template.app"]
   end
 
   zap trash: [
