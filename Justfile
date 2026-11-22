@@ -2,6 +2,8 @@
 # tools behind them (README.md, Checks). A scope is `all` (default), `changed` (the files
 # that differ from origin/main) or `staged`.
 
+set shell := ["mise", "exec", "--", "bash", "-euo", "pipefail", "-c"]
+
 _default:
     @just --list --unsorted
 
