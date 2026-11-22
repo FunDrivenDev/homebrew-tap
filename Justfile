@@ -21,6 +21,7 @@ fmt scope="all":
 
 # Lint the files in scope; `family` narrows it to shell, actions or casks (casks need brew).
 lint scope="all" family="":
+    scripts/check-justfile.sh
     scripts/lint.sh {{ quote(scope) }} {{ quote(family) }}
 
 # Run the tests of the CI change classifier, when it is in scope.
