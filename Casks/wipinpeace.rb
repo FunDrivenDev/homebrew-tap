@@ -1,8 +1,8 @@
 # The cask `just publish` writes into FunDrivenDev/homebrew-tap, with its version and
 # sha256 filled in.
 cask "wipinpeace" do
-  version "0.1.8"
-  sha256 "e84ce1b7a5d63b69ee88faf95b5d9deeeef99a7f82ba1124907f195075c04311"
+  version "0.1.9"
+  sha256 "53fc167a32aeb0f112fc7685cfbb98c9ebe1f2ecfe789fa10f839230c5b4a8fd"
 
   url "https://github.com/FunDrivenDev/homebrew-tap/releases/download/wipinpeace-#{version}/wipinpeace-#{version}-macos-arm64.zip"
   name "wipinpeace"
